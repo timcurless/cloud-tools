@@ -7,7 +7,7 @@
     "CloudFormationBucket": {
       "Description": "Name of S3 bucket containing CloudFormation templates. If using appended region name, do not include.",
       "Type": "String",
-      "Default": "https://s3.amazonaws.com/hooklogic-a1-cloudformation-"
+      "Default": "https://s3.amazonaws.com/ahead-a1-cloudformation-"
     }
 
   },
