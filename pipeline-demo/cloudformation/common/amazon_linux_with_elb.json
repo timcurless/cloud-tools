@@ -511,7 +511,7 @@
         "Tags": [
           {
             "Key": "ProductName",
-            "Value": { "Ref": "Product" }
+            "Value": { "Ref": "ProductName" }
           },
           {
             "Key": "release",
