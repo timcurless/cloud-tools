@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Beacon Top-Level CloudFormation Stack",
+  "Description": "BagApp Top-Level CloudFormation Stack",
 
   "Parameters": {
     "Environment": {
@@ -9,12 +9,12 @@
       "Default": "Prod"
     },
     "UATVPCID": {
-      "Description": "Hook Logic UAT VPC Id",
+      "Description": "Ahead UAT VPC Id",
       "Type": "String",
       "Default": "fill in"
     },
     "UATVPCCIDR": {
-      "Description": "HookLogic UAT VPC CIDR",
+      "Description": "Ahead UAT VPC CIDR",
       "Type": "String",
        "Default": "fill in"
     },
@@ -26,27 +26,27 @@
     "BootstrapBucket": {
       "Description": "Name of S3 bucket containing bootstrap scripts. If using appended region name, do not include.",
       "Type": "String",
-      "Default": "hooklogic-a1-bootstrap-"
+      "Default": "ahead-a1-bootstrap-"
     },
     "CloudFormationBucket": {
       "Description": "Name of S3 bucket containing CloudFormation templates. If using appended region name, do not include.",
       "Type": "String",
-      "Default": "https://s3.amazonaws.com/hooklogic-a1-cloudformation-"
+      "Default": "https://s3.amazonaws.com/ahead-a1-cloudformation-"
     },
     "CloudTrailsBucket": {
       "Description": "Name of S3 bucket containing CloudTrail logs. If using appended region name, do not include.",
       "Type": "String",
-      "Default": "hooklogic-a1-cloudtrail-"
+      "Default": "ahead-a1-cloudtrail-"
     },
     "LambdaBucket": {
       "Description": "Name of S3 bucket containing lambda deployment packages",
       "Type": "String",
-      "Default": "hooklogic-a1-lambda-"
+      "Default": "ahead-a1-lambda-"
     },
     "ChefS3Bucket" : {
       "Description": "Name of S3 bucket containing chef recpies. If using appended region name, do not include.",
       "Type": "String",
-      "Default": "hooklogic-a1-chef-repo-"
+      "Default": "ahead-a1-chef-repo-"
     },
     "CommonPublicEC2Key": {
       "Description": "Common Public EC2 key pair to be used across instances. If using appended region, do not include.",
@@ -97,7 +97,7 @@
     "ChefS3BucketName" : {
       "Description": "Bucket Chef recipies are stored in",
       "Type": "String",
-      "Default": "hooklogic-a1-chef-repo-us-east-1"
+      "Default": "ahead-a1-chef-repo-us-east-1"
     },
     "AssociatePublicIPAddress": {
       "Description": "Whether or not the EC2 instances in the ASG will be given a public IP address.",
@@ -267,7 +267,7 @@
     "BootstrapS3BucketName": {
       "Description": "The name of the S3 bucket containing provision/bootstrap scripts to be executed within UserData.",
       "Type": "String",
-      "Default": "hooklogic-a1-bootstrap-us-east-1",
+      "Default": "ahead-a1-bootstrap-us-east-1",
       "ConstraintDescription": "Must be a string."
     },
     "VPCID": {
@@ -303,7 +303,7 @@
 
   "Resources": {
 
-    "Beacon": {
+    "BagApp": {
       "DependsOn":                              [  ],
       "Type": "AWS::CloudFormation::Stack",
       "Properties": {
