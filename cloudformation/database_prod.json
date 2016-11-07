@@ -1,0 +1,41 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Top-Level CloudFormation Stack",
+
+  "Parameters": {
+
+    "CloudFormationBucket": {
+      "Description": "Name of S3 bucket containing CloudFormation templates. If using appended region name, do not include.",
+      "Type": "String",
+      "Default": "https://s3.amazonaws.com/hooklogic-a1-cloudformation-"
+    }
+
+  },
+
+  "Mappings": {},
+
+  "Resources": {
+
+    "ProdDB4": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": { "Fn::Join": [ "", [ { "Ref" : "CloudFormationBucket" }, { "Ref":"AWS::Region" }, "/common/", "sql_server_rds.json" ] ] },
+        "Parameters": {
+          "DBAllocatedStorage":    "2048",
+          "DBClass":               "db.m1.medium",
+          "DBInstanceIdentifier":  "Travel-ProdDB4",
+          "DBSnapshotIdentifier":  "db4-prod-cfn",
+          "DBSubnetGroup":         "hk-prod-network-vg9qek7aqpxv-rdssubnetgroup-hvcdxmqw5nd2",
+          "OptionGroupName":       "default:sqlserver-se-12-00",
+          "RDSVPCSecGrp":          "sg-ec8f0597",
+          "SnapshotStorageType":   "gp2",
+          "IsMultiAZ":             "False"
+        }
+      }
+    }
+
+  },
+
+  "Outputs": {}
+}
+

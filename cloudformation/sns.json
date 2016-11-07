@@ -1,0 +1,93 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "SNS",
+
+  "Parameters" : {
+    "PrimaryEmailAddress" : {
+      "Description" : "Primary email address used for SNS topics.",
+      "Type" : "String",
+      "Default" : "infrastructure@thinkahead.com",
+      "MinLength" : "5",
+      "MaxLength" : "128",
+      "AllowedPattern" : "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$",
+      "ConstraintDescription" : "Must be a valid email address."
+    },
+    "PrimarySNSDisplayName" : {
+      "Description" : "Primary SNS topic display name.",
+      "Type" : "String",
+      "Default" : "Ahead-Primary",
+      "MinLength" : "1",
+      "MaxLength" : "100",
+      "ConstraintDescription" : "Must be <= 100 characters."
+    },
+    "JenkinsSNSDisplayName" : {
+      "Description" : "Jenkins SNS topic display name.",
+      "Type" : "String",
+      "Default" : "Ahead-Jenkins-Primary",
+      "MinLength" : "1",
+      "MaxLength" : "100",
+      "ConstraintDescription" : "Must be <= 100 characters."
+    },
+    "JenkinsDeploySNSDisplayName" : {
+      "Description" : "Jenkins SNS topic display name.",
+      "Type" : "String",
+      "Default" : "Ahead-Jenkins-Deploy",
+      "MinLength" : "1",
+      "MaxLength" : "100",
+      "ConstraintDescription" : "Must be <= 100 characters."
+    }
+
+
+  },
+
+  "Mappings" : {
+  },
+
+  "Conditions" : {
+  },
+
+  "Resources" : {
+    "Primary" : {
+         "Type" : "AWS::SNS::Topic",
+         "Properties" : {
+            "DisplayName" : { "Ref" : "PrimarySNSDisplayName" },
+            "TopicName" : { "Ref" : "PrimarySNSDisplayName" },
+            "Subscription" : [ { "Endpoint" : { "Ref" : "PrimaryEmailAddress" }, "Protocol" : "email" } ]
+         }
+    },
+    "Jenkins" : {
+         "Type" : "AWS::SNS::Topic",
+         "Properties" : {
+            "DisplayName" : { "Ref" : "JenkinsSNSDisplayName" },
+            "TopicName" : { "Ref" : "JenkinsSNSDisplayName" },
+            "Subscription" : [ { "Endpoint" : { "Ref" : "PrimaryEmailAddress" }, "Protocol" : "email" } ]
+         }
+    },
+    "JenkinsDeploy" : {
+         "Type" : "AWS::SNS::Topic",
+         "Properties" : {
+            "DisplayName" : { "Ref" : "JenkinsDeploySNSDisplayName" },
+            "TopicName" : { "Ref" : "JenkinsDeploySNSDisplayName" },
+            "Subscription" : [ { "Endpoint" : { "Ref" : "PrimaryEmailAddress" }, "Protocol" : "email" } ]
+         }
+    }
+
+  },
+
+  "Outputs" : {
+    "Primary" : {
+      "Description" : "Primary SNS topic ARN.",
+      "Value" : { "Ref" : "Primary" }
+    },
+    "Jenkins" : {
+      "Description" : "Jenkins SNS topic ARN.",
+      "Value" : { "Ref" : "Jenkins" }
+    },
+    "JenkinsDeploy" : {
+      "Description" : "Jenkins SNS topic ARN.",
+      "Value" : { "Ref" : "JenkinsDeploy" }
+    }
+
+  }
+}

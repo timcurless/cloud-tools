@@ -1,0 +1,83 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Backend Lambda PushModel Function Template",
+  "Parameters": {
+    "LambdaFunctionHandler": {
+      "Description": "The handler for your Lambda function",
+      "Type": "String",
+      "Default": ""
+    },
+    "LambdaExecutionRole": {
+      "Description": "The Role your Lambda function should assume",
+      "Type": "String",
+      "Default": ""
+    },
+    "LambdaPackageS3Bucket": {
+      "Description": "The bucket where your Lambda package (code) resides. Remember the dash for region joins: organization-lambdas-",
+      "Type": "String",
+      "Default": ""
+    },
+    "LambdaPackage": {
+      "Description": "The name of your Lambda deployment package",
+      "Type": "String",
+      "Default": ""
+    },
+    
+    "LambdaRuntimeEnvironment": {
+      "Description": "The runtime environment for your Lambda function",
+      "Type": "String",
+      "Default": ""
+    },
+    "LambdaFunctionTimeout": {
+      "Description": "The configured timeout for your function",
+      "Type": "String",
+      "Default": ""
+    },
+    "PermissionPrincipal": {
+      "Description": "The service principle allowed to invoke your Lambda function",
+      "Type": "String",
+      "Default": "events.amazonaws.com"
+    },
+    "PermissionArn": {
+      "Description": "The arn of the specific resource allowed to invoke your function",
+      "Type": "String",
+      "Default": "arn:aws:events:us-east-1:123456789012:rule/MyRule"
+    },
+    "S3BucketArn": {
+      "Description": "The ARN of the bucket that is allowed to invoke this function",
+      "Type": "String",
+      "Default": ""
+    }
+  },
+  "Mappings": {},
+  
+  "Conditions": {},
+  
+  "Resources": {
+    "LambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Handler": { "Ref":"LambdaFunctionHandler"},
+        "Role": { "Ref":"LambdaExecutionRole"},
+        "Code": {
+          "S3Bucket": {"Ref":"LambdaPackageS3Bucket"},
+          "S3Key": {"Ref":"LambdaPackage"}
+        },
+        "Runtime": { "Ref":"LambdaRuntimeEnvironment"},
+        "Timeout": {"Ref":"LambdaFunctionTimeout"}
+      }
+    }, 
+    "LambdaInvokePermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName" : { "Fn::GetAtt" : ["LambdaFunction", "Arn"] },
+        "Action": "lambda:InvokeFunction",
+        "Principal": {"Ref":"PermissionPrincipal"},
+        "SourceAccount": { "Ref" : "AWS::AccountId" },
+        "SourceArn": {"Ref":"PermissionArn"}
+      }
+    }
+  },
+  "Outputs": {
+  }
+}

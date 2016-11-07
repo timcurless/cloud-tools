@@ -1,0 +1,520 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "IAM",
+
+  "Parameters": {
+
+    "CloudtrailS3BucketARN": {
+      "Description": "ARN of the S3 bucket for CloudTrail.",
+      "Type": "String"
+    },
+    "BootstrapS3BucketARN": {
+      "Description": "ARN of the S3 bucket for bootstrap scripts.",
+      "Type": "String"
+    },
+    "CloudFormationS3BucketARN": {
+      "Description": "ARN of the S3 bucket for bootstrap scripts.",
+      "Type": "String"
+    },
+    "CodeS3BucketARN": {
+      "Description": "ARN of the S3 bucket where code is stored at.",
+      "Type": "String"
+    },
+    "InternalHostedZoneID": {
+      "Description": "ARN of the internal hosted zone ID (Route 53).",
+      "Type": "String"
+    }
+  },
+
+  "Mappings": { 
+  },
+
+  "Conditions": {
+  },
+
+  "Resources": {
+
+    "NATInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "NATIAMRole"
+          }
+        ]
+      }
+    },
+
+    "NATIAMRole": {
+      "Type":"AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument":{
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "NATPolicy",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Sid": "AllowENIManipulation",
+                  "Action": [
+                    "ec2:AttachNetworkInterface",
+                    "ec2:DescribeNetworkInterfaceAttribute",
+                    "ec2:ModifyNetworkInterfaceAttribute",
+                    "ec2:DescribeNetworkInterfaces",
+                    "ec2:DetachNetworkInterface"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                },
+                {
+                  "Sid": "AllowModifyInstanceAttribute",
+                  "Action": [
+                    "ec2:ModifyInstanceAttribute"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                },
+                {
+                  "Sid": "AllowDescribeTags",
+                  "Action": [
+                    "ec2:DescribeTags"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                },
+                {
+                  "Sid": "AllowDescribeLoadBalancers",
+                  "Action": [
+                    "elasticloadbalancing:DescribeLoadBalancers"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                },
+                {
+                  "Sid": "AllowS3ListAllMyBuckets",
+                  "Action": [
+                    "s3:ListAllMyBuckets"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                },
+                {
+                  "Sid": "AllowS3BootstrapBucket",
+                  "Action": "s3:*",
+                  "Effect": "Allow",
+                  "Resource": [
+                    { "Ref": "BootstrapS3BucketARN" },
+                    { "Fn::Join": [ "", [ { "Ref": "BootstrapS3BucketARN" }, "/*" ] ] }
+                  ]
+                },
+                {
+                  "Sid": "AllowSNSPublish",
+                  "Action": [
+                    "sns:Publish"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+
+    "BastionInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "BastionIAMRole"
+          }
+        ]
+      }
+    },
+
+    "BastionIAMRole": {
+      "Type":"AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument":{
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "BastionPolicy",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Sid": "AllowDescribeLoadBalancers",
+                  "Action": [
+                    "elasticloadbalancing:DescribeLoadBalancers"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                },
+                {
+                  "Sid": "AllowS3ListAllMyBuckets",
+                  "Action": [
+                    "s3:ListAllMyBuckets"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                },
+                {
+                  "Sid": "AllowS3BootstrapBucket",
+                  "Action": "s3:*",
+                  "Effect": "Allow",
+                  "Resource": [
+                    { "Ref": "BootstrapS3BucketARN" },
+                    { "Fn::Join": [ "", [ { "Ref": "BootstrapS3BucketARN" }, "/*" ] ] }
+                  ]
+                },
+                {
+                  "Sid": "AllowHostedZoneAttachment",
+                  "Action": [
+		      "route53:AssociateVPCWithHostedZone",
+		      "ec2:DescribeVpcAttribute",
+                      "ec2:DescribeVpcs" 
+		  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                },
+
+                {
+                  "Sid": "AllowSNSPublish",
+                  "Action": [
+                    "sns:Publish"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+
+    "JenkinsInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "JenkinsIAMRole"
+          }
+        ]
+      }
+    },
+
+
+    "JenkinsIAMRole": {
+      "Type":"AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument":{
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "JenkinsPolicy",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Sid": "AllowUpdateAWSInternalZone",
+                  "Action": [
+                    "route53:ChangeResourceRecordSets"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "arn:aws:route53:::hostedzone/Z2MJ4158UPZLLC"
+                },
+                {
+                  "Sid": "AllowS3Code",
+                  "Action": "s3:*",
+                  "Effect": "Allow",
+                  "Resource": { "Ref": "CodeS3BucketARN" }
+                },
+                {
+                  "Sid": "AllowS3CodeObjects",
+                  "Action": "s3:*",
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": ["", [
+                      { "Ref": "CodeS3BucketARN" },
+                      "/*"
+                    ] ]
+                  }
+                },
+                {
+                  "Sid": "AllowDescribeLoadBalancers",
+                  "Action": [
+                    "elasticloadbalancing:DescribeLoadBalancers"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                },
+                {
+                  "Sid": "AllowS3ListAllMyBuckets",
+                  "Action": [
+                    "s3:ListAllMyBuckets"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                },
+                {
+                  "Sid": "AllowS3BootstrapBucket",
+                  "Action": "s3:*",
+                  "Effect": "Allow",
+                  "Resource": { "Ref": "BootstrapS3BucketARN" }
+                },
+                {
+                  "Sid": "AllowS3BootstrapObjects",
+                  "Action": "s3:*",
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": ["", [
+                      { "Ref": "BootstrapS3BucketARN" },
+                      "/*"
+                    ] ]
+                  }
+                },
+                {
+                  "Sid": "AllowSNSPublish",
+                  "Action": [
+                    "sns:Publish"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                },
+                {
+                  "Sid": "PackerRequiredPermissions",
+                  "Action" : [
+                    "ec2:AttachVolume",
+                    "ec2:CreateVolume",
+                    "ec2:DeleteVolume",
+                    "ec2:CreateKeypair",
+                    "ec2:DeleteKeypair",
+                    "ec2:DescribeSubnets",
+                    "ec2:CreateSecurityGroup",
+                    "ec2:DeleteSecurityGroup",
+                    "ec2:AuthorizeSecurityGroupIngress",
+                    "ec2:CreateImage",
+                    "ec2:CopyImage",
+                    "ec2:RunInstances",
+                    "ec2:TerminateInstances",
+                    "ec2:StopInstances",
+                    "ec2:DescribeVolumes",
+                    "ec2:DetachVolume",
+                    "ec2:DescribeInstances",
+                    "ec2:CreateSnapshot",
+                    "ec2:DeleteSnapshot",
+                    "ec2:DescribeSnapshots",
+                    "ec2:DescribeImages",
+                    "ec2:RegisterImage",
+                    "ec2:CreateTags",
+                    "ec2:ModifyImageAttribute"
+                    ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                }
+
+              ]
+            }
+          }
+        ]
+      }
+    },
+
+    "CloudTrailProcessorRole": {
+      "Type":"AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument":{
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "CTPPolicy",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Sid": "AllowCloudTrailActions",
+                  "Action": [
+                    "s3:*",
+                    "sns:*"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+
+    "CommonIAMRole": {
+        "Type":"AWS::IAM::Role",
+        "Properties": {
+            "AssumeRolePolicyDocument":{
+                 "Statement": [{
+                      "Effect": "Allow",
+                      "Principal": {
+                          "Service": ["ec2.amazonaws.com"]
+                      },
+                      "Action": ["sts:AssumeRole"]
+                  }]
+            },
+            "Path": "/",
+            "Policies": [{
+              "PolicyName": "BasicPolicy",
+              "PolicyDocument":
+	             {
+                 "Statement": [
+                 {
+                    "Sid": "AllowS3ListAllMyBuckets",
+                    "Action": ["s3:ListAllMyBuckets"],
+                    "Effect": "Allow",
+                    "Resource": "*"
+                 },
+                 {
+                    "Sid": "AllowS3BootstrapBucket",
+                    "Action": "s3:*",
+                    "Effect": "Allow",
+                    "Resource": [
+                      {"Ref": "BootstrapS3BucketARN"},
+                      {"Fn::Join": [ "", [ { "Ref": "BootstrapS3BucketARN" }, "/*" ] ]}
+                      ]
+                 },
+                 {
+                   "Sid": "AllowS3Code",
+                   "Action": "s3:*",
+                   "Effect": "Allow",
+                   "Resource": [{ "Ref": "CodeS3BucketARN" },
+                   { "Fn::Join": [ "", [ { "Ref": "CodeS3BucketARN" }, "/*" ] ] }]
+                 },
+	         {
+                    "Sid": "AllowS3All",
+                    "Action": "s3:*",
+	            "Effect": "Allow",
+                    "Resource": "arn:aws:s3:::*"
+                 },
+                 {
+                    "Sid": "AllowCloudWatch",
+                    "Action": "cloudwatch:*",
+                    "Effect": "Allow",
+                    "Resource": "*"
+                 },
+                 {
+                    "Sid": "AllowSNSPublish",
+                    "Action": ["sns:Publish"],
+                    "Effect": "Allow",
+                    "Resource": "*"
+                 },
+                 {
+                    "Sid": "AllowSWFAll",
+                    "Action": "swf:*",
+                    "Effect": "Allow",
+                    "Resource": "*"
+                 },
+	         {
+                    "Sid": "AllowDescribeTags",
+                    "Action": ["ec2:DescribeTags"],
+                    "Effect": "Allow",
+                    "Resource": "*"
+                 }]
+              }
+            }]
+         }
+     },
+    "CommonInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [{ "Ref": "CommonIAMRole" }]
+      }
+   }
+
+ 
+  },
+
+  "Outputs": {
+
+    "NATInstanceProfile":{
+      "Description":"NAT IAM instance profile",
+      "Value": { "Ref":"NATInstanceProfile" }
+    },
+    "CommonInstanceProfile":{
+      "Description":"Common IAM instance profile",
+      "Value": { "Ref":"CommonInstanceProfile" }
+    },
+    "BastionInstanceProfile":{
+      "Description":"Bastion IAM instance profile",
+      "Value": { "Ref":"BastionInstanceProfile" }
+    },
+    "JenkinsInstanceProfile":{
+      "Description":"Jenkins IAM instance profile",
+      "Value": { "Ref":"JenkinsInstanceProfile" }
+    },
+    "CloudTrailProcessorRole":{
+      "Description":"CloudTrailProcessorRoleArn",
+      "Value": {"Fn::GetAtt" : ["CloudTrailProcessorRole", "Arn"] }
+    }
+
+  }
+
+}

@@ -1,0 +1,298 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Top-Level CloudFormation Stack",
+
+  "Parameters": {
+    "Environment": {
+      "Description": "The application environment",
+      "Type": "String",
+      "Default": "Prod"
+    },
+    "UATVPCID": {
+      "Description": "Ahead UAT VPC Id",
+      "Type": "String",
+      "Default": "fill in"
+    },
+    "UATVPCCIDR": {
+      "Description": "Ahead UAT VPC CIDR",
+      "Type": "String",
+       "Default": "fill in"
+    },
+    "ProductName": {
+      "Description": ".",
+      "Type": "String",
+      "Default": "BagApp"
+    },
+    "BootstrapBucket": {
+      "Description": "Name of S3 bucket containing bootstrap scripts. If using appended region name, do not include.",
+      "Type": "String",
+      "Default": "ahead-awstools-us-east-1"
+    },
+    "CloudToolsBucket": {
+      "Description": "Name of S3 bucket containing CloudFormation templates. If using appended region name, do not include.",
+      "Type": "String",
+      "Default": "ahead-awstools"
+    },
+    "CloudTrailsBucket": {
+      "Description": "Name of S3 bucket containing CloudTrail logs. If using appended region name, do not include.",
+      "Type": "String",
+      "Default": "ahead-cloudtrail-all"
+    },
+    "LambdaBucket": {
+      "Description": "Name of S3 bucket containing lambda deployment packages",
+      "Type": "String",
+      "Default": "ahead-awstools"
+    },
+    "ChefS3Bucket" : {
+      "Description": "Name of S3 bucket containing chef recpies. If using appended region name, do not include.",
+      "Type": "String",
+      "Default": "ahead-awstools"
+    },
+    "CommonPublicEC2Key": {
+      "Description": "Common Public EC2 key pair to be used across instances. If using appended region, do not include.",
+      "Type": "String",
+      "Default": "vito-dev"
+    },
+    "CommonEC2Key": {
+      "Description": "Common EC2 key pair to be used across instances. If using appended region, do not include.",
+      "Type": "String",
+      "Default": "common-"
+    },
+    "BastionEC2Key": {
+      "Description": "Bastion EC2 key pair to be used across instances publicly reachable instances",
+      "Type": "String",
+      "Default": "vito-dev"
+    }
+
+  },
+
+  "Mappings": {
+
+    "AmazonLinux201503": {
+      "us-east-1":      { "64HVMGP2": "ami-1ecae776", "64PVStandard": "ami-1ccae774" },
+      "us-west-1":      { "64HVMGP2": "ami-d114f295", "64PVStandard": "ami-d514f291" },
+      "us-west-2":      { "64HVMGP2": "ami-e7527ed7", "64PVStandard": "ami-ff527ecf" },
+      "eu-central-1":   { "64HVMGP2": "ami-a8221fb5", "64PVStandard": "ami-ac221fb1" },
+      "eu-west-1":      { "64HVMGP2": "ami-a10897d6", "64PVStandard": "ami-bf0897c8" },
+      "ap-northeast-1": { "64HVMGP2": "ami-cbf90ecb", "64PVStandard": "ami-27f90e27" },
+      "ap-southeast-1": { "64HVMGP2": "ami-68d8e93a", "64PVStandard": "ami-acd9e8fe" },
+      "ap-southeast-2": { "64HVMGP2": "ami-fd9cecc7", "64PVStandard": "ami-ff9cecc5" },
+      "sa-east-1":      { "64HVMGP2": "ami-b52890a8", "64PVStandard": "ami-bb2890a6" }
+    },
+
+    "CentOS": {
+      "us-east-1":      { "CentOS6": "ami-bc8131d4", "CentOS7": "ami-96a818fe" },
+      "us-west-1":      { "CentOS6": "ami-33c1ca76", "CentOS7": "ami-c7d092f7" },
+      "us-west-2":      { "CentOS6": "ami-a9de9c99", "CentOS7": "ami-c7d092f7" },
+      "eu-central-1":   { "CentOS6": "ami-c8b587d5", "CentOS7": "ami-7cc4f661" },
+      "eu-west-1":      { "CentOS6": "ami-4ac6653d", "CentOS7": "ami-e4ff5c93" },
+      "ap-northeast-1": { "CentOS6": "ami-25436924", "CentOS7": "ami-89634988" },
+      "ap-southeast-1": { "CentOS6": "ami-0aaf8858", "CentOS7": "ami-aea582fc" },
+      "ap-southeast-2": { "CentOS6": "ami-ef5133d5", "CentOS7": "ami-bd523087" },
+      "sa-east-1":      { "CentOS6": "ami-9b962386", "CentOS7": "ami-bf9520a2" }
+    },
+
+    "Ubuntu": {
+      "us-east-1":      { "1404": "ami-fce3c696" },
+      "us-west-1":      { "1404": "ami-df6a8b9b" },
+      "us-west-2":      { "1404": "ami-5189a661" },
+      "eu-central-1":   { "1404": "ami-accff2b1" },
+      "eu-west-1":      { "1404": "ami-47a23a30" },
+      "ap-northeast-1": { "1404": "ami-936d9d93" },
+      "ap-southeast-1": { "1404": "ami-96f1c1c4" },
+      "ap-southeast-2": { "1404": "ami-69631053" },
+      "sa-east-1":      { "1404": "ami-4d883350" }
+    },
+    
+    "Windows": {
+      "us-east-1":      { "2012": "ami-c8a9baa2" },
+      "us-west-1":      { "2012": "ami-df8767bf" },
+      "us-west-2":      { "2012": "ami-95fd8bf5" },
+      "eu-central-1":   { "2012": "ami-5dd2c931" },
+      "eu-west-1":      { "2012": "ami-8519a9f6" },
+      "ap-northeast-1": { "2012": "ami-14b8bc7a" },
+      "ap-southeast-1": { "2012": "ami-9801cffb" },
+      "ap-southeast-2": { "2012": "ami-db0a2db8" },
+      "sa-east-1":      { "2012": "ami-828e0dee" }
+    }
+
+
+  },
+
+  "Resources": {
+
+    "Network": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL":                         {"Fn::Join": [ "", ["https://s3.amazonaws.com/", {"Ref": "CloudToolsBucket"}, {"Ref": "AWS::Region"}, "/cloudformation/",  "network.json"]] },
+        "Parameters": {
+          "ProductName":                       { "Ref": "ProductName" },
+          "DomainName":                        "ahead.internal",
+	  "Environment":                       {"Ref": "Environment"}
+        }
+      }
+    },
+
+    "SNS": {
+          "Type": "AWS::CloudFormation::Stack",
+          "Properties": {
+            "TemplateURL": { "Fn::Join": [ "", [ "https://s3.amazonaws.com/", {"Ref": "CloudToolsBucket"}, {"Ref": "AWS::Region"}, "/cloudformation/",  "sns.json" ] ] },
+            "Parameters": {
+                "PrimaryEmailAddress": "vito.brooks@thinkahead.com",
+                "PrimarySNSDisplayName": "Ahead-Primary"
+            }
+          }
+    },
+
+
+
+
+    "IAM": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL":                          { "Fn::Join": [ "", [ { "Ref" : "CloudToolsBucket" }, { "Ref":"AWS::Region" }, "/common/", "iam.json" ] ] },
+        "Parameters": {
+          "CloudtrailS3BucketARN":              { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref" : "CloudTrailsBucket" }, { "Ref":"AWS::Region" } ] ] },
+          "BootstrapS3BucketARN":               { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref" : "BootstrapBucket" }, { "Ref":"AWS::Region" } ] ] },
+          "CloudFormationS3BucketARN":          { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref" : "CloudToolsBucket" }, { "Ref":"AWS::Region" } ] ] },
+          "CodeS3BucketARN":                    { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref" : "LambdaBucket" }, { "Ref":"AWS::Region" } ] ] },
+          "InternalHostedZoneID":               "Z2BIT0AGZEZ0JW"
+        }
+      }
+    },
+
+
+    "BastionLinux": {
+      "DependsOn": [  ],
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL":                          {"Fn::Join": [ "", ["https://s3.amazonaws.com/", {"Ref": "CloudToolsBucket"}, {"Ref": "AWS::Region"}, "/cloudformation/common/",  "amzn_linux_asg.json"]] }, 
+        "Parameters": {
+          "IsMultiAZStack":                     "False",
+          "Role":                               "Bastion-Linux",
+          "Environment":                        {"Ref": "Environment"},
+          "InstanceType":                       "t2.small",
+          "AMI":                                { "Fn::FindInMap" : [ "AmazonLinux201503", { "Ref" : "AWS::Region" }, "64HVMGP2"] },
+          "BootstrapFileName":                  "bastion.sh",
+          "AssociatePublicIPAddress":           "True",
+          "HostedZoneID":                       "Z19FAM23ILJ9GA",
+          "VPCID":                              { "Fn::GetAtt" : [ "Network", "Outputs.VPC" ] },
+          "RootEBSVolumeSize":                  "10",
+          "EBSVolumeType":                      "gp2",
+          "DeleteEBSVolumesOnTermination":      "True",
+
+          "ASGHealthCheckType":                 "EC2",
+          "HealthCheckGracePeriod":             "300",
+          "DesiredInstancesCount":              "1",
+          "MaxInstancesCount":                  "2",
+          "MinInstancesCount":                  "1",
+          "ScaleUpAdjustment":                  "1",
+          "ScaleUpCooldown":                    "300",
+          "ScaleDownAdjustment":                "-1",
+          "ScaleDownCooldown":                  "300",
+
+          "HighCPUThreshold":                   "200",
+          "HighCPUPeriod":                      "60",
+          "LowCPUThreshold":                    "10",
+          "LowCPUPeriod":                       "60",
+
+          "RollingUpdateMinInstancesInService": "1",
+          "RollingUpdateMaxBatchSize":          "1",
+          "RollingUpdatePauseTime":             "PT0M30S",
+
+          "IAMInstanceProfile":                 { "Fn::GetAtt" : [ "IAM", "Outputs.BastionInstanceProfile" ] },
+          "InstanceSubnetAZ1":                  { "Fn::GetAtt" : [ "Network", "Outputs.ManagementPublicAz1Subnet" ] },
+          "InstanceSubnetAZ2":                  { "Fn::GetAtt" : [ "Network", "Outputs.ManagementPublicAz2Subnet" ] },
+          "InstanceSubnetAZ3":                  { "Fn::GetAtt" : [ "Network", "Outputs.ManagementPublicAz3Subnet" ] },
+          "InstanceSecurityGroups":             { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.BastionSecurityGroup" ] },
+
+          "CloudWatchAlarmSNSTopic":            { "Fn::GetAtt" : [ "SNS", "Outputs.Primary" ] },
+          "EC2KeyPair":                         { "Fn::Join": [ "", [ { "Ref" : "BastionEC2Key" }, { "Ref":"AWS::Region" } ] ] },
+          "BootstrapS3BucketName":              { "Fn::Join": [ "", [ { "Ref" : "BootstrapBucket" }, { "Ref":"AWS::Region" } ] ] },
+          "ChefS3BucketName":                   { "Fn::Join": [ "", [ { "Ref" : "ChefS3Bucket" }, { "Ref":"AWS::Region" } ] ] },
+          "ProductName":                        { "Ref": "ProductName" }
+        }
+      }
+    },
+
+
+    "Jenkins": {
+      "DependsOn": [ "Network" ],
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": { "Fn::Join": [ "", [ { "Ref" : "CloudToolsBucket" }, { "Ref":"AWS::Region" }, "/common/amzn_linux_asg_and_elb_dns.json" ] ] },
+        "Parameters": {
+          "IsMultiAZStack":                     "True",
+          "Role":                               "Jenkins",
+          "Environment":                        "Mgmt",
+          "InstanceType":                       "t2.small",
+          "AMI":                                "ami-70f4031d",
+          "BootstrapFileName":                  "jenkins.ps1",
+          "AssociatePublicIPAddress":           "False",
+          "RootEBSVolumeSize":                  "120",
+          "EBSVolumeType":                      "standard",
+          "DeleteEBSVolumesOnTermination":      "True",
+
+          "ASGHealthCheckType":                 "EC2",
+          "DesiredInstancesCount":              "1",
+          "MaxInstancesCount":                  "2",
+          "MinInstancesCount":                  "1",
+          "ScaleUpAdjustment":                  "1",
+          "ScaleUpCooldown":                    "300",
+          "ScaleDownAdjustment":                "-1",
+          "ScaleDownCooldown":                  "300",
+
+          "HighCPUThreshold":                   "200",
+          "HighCPUPeriod":                      "60",
+          "LowCPUThreshold":                    "10",
+          "LowCPUPeriod":                       "60",
+
+          "RollingUpdateMinInstancesInService": "1",
+          "RollingUpdateMaxBatchSize":          "1",
+          "RollingUpdatePauseTime":             "PT0M30S",
+
+
+          "IAMInstanceProfile":                 { "Fn::GetAtt" : [ "IAM", "Outputs.JenkinsInstanceProfile" ] },
+          "InstanceSubnetAZ1":                  { "Fn::GetAtt" : [ "Network", "Outputs.PrivateAz1Subnet" ] },
+          "InstanceSubnetAZ2":                  { "Fn::GetAtt" : [ "Network", "Outputs.PrivateAz2Subnet" ] },
+	        "InstanceSubnetAZ3":                  { "Fn::GetAtt" : [ "Network", "Outputs.PrivateAz3Subnet" ] },
+          "InstanceSecurityGroups":             { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.JenkinsSecurityGroup" ] },
+
+          "CloudWatchAlarmSNSTopic":            { "Fn::GetAtt" : [ "SNS", "Outputs.Primary" ] },
+          "EC2KeyPair":                         { "Fn::Join": [ "", [ { "Ref" : "BastionEC2Key" }, { "Ref":"AWS::Region" } ] ] },
+          "BootstrapS3BucketName":              { "Fn::Join": [ "", [ { "Ref" : "BootstrapBucket" }, { "Ref":"AWS::Region" } ] ] },
+          "ChefS3BucketName":                   { "Fn::Join": [ "", [ { "Ref" : "ChefS3Bucket" }, { "Ref":"AWS::Region" } ] ] },
+          "ProductName":                        { "Ref": "ProductName" }
+        }
+      }
+    }, 
+
+    
+    "SecurityGroups": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL":                          { "Fn::Join": [ "", [ { "Ref" : "CloudToolsBucket" }, { "Ref":"AWS::Region" }, "/common/", "security_groups.json" ] ] },
+        "Parameters": {
+          "ProductName":                        { "Ref": "ProductName" },
+          "Environment":                        { "Ref": "Environment" },
+          "VPCID" :                             { "Fn::GetAtt" : [ "Network", "Outputs.VPC" ] },
+          "VPCCIDR":                            { "Fn::GetAtt" : [ "Network", "Outputs.VPCSubnet" ] },
+	  "OpsIpOne":                           "68.43.4.163/32"
+        }
+      }
+    },
+    "CloudTrail": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL":                          { "Fn::Join": [ "", [ { "Ref" : "CloudToolsBucket" }, { "Ref":"AWS::Region" }, "/common/", "cloudtrails.json" ] ] },
+        "Parameters": {
+          "S3CloudTrailBucket":                 { "Fn::Join": [ "", [ { "Ref" : "CloudTrailsBucket" },    { "Ref":"AWS::Region" } ] ] }
+        }
+      }
+    },
+
+  },
+
+  "Outputs": {}
+}
+

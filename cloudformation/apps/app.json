@@ -1,0 +1,361 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Beacon Top-Level CloudFormation Stack",
+
+  "Parameters": {
+    "Environment": {
+      "Description": "The application environment",
+      "Type": "String",
+      "Default": "Prod"
+    },
+    "UATVPCID": {
+      "Description": "Hook Logic UAT VPC Id",
+      "Type": "String",
+      "Default": "fill in"
+    },
+    "UATVPCCIDR": {
+      "Description": "HookLogic UAT VPC CIDR",
+      "Type": "String",
+       "Default": "fill in"
+    },
+    "ProductName": {
+      "Description": ".",
+      "Type": "String",
+      "Default": "Data"
+    },
+    "BootstrapBucket": {
+      "Description": "Name of S3 bucket containing bootstrap scripts. If using appended region name, do not include.",
+      "Type": "String",
+      "Default": "hooklogic-a1-bootstrap-"
+    },
+    "CloudFormationBucket": {
+      "Description": "Name of S3 bucket containing CloudFormation templates. If using appended region name, do not include.",
+      "Type": "String",
+      "Default": "https://s3.amazonaws.com/hooklogic-a1-cloudformation-"
+    },
+    "CloudTrailsBucket": {
+      "Description": "Name of S3 bucket containing CloudTrail logs. If using appended region name, do not include.",
+      "Type": "String",
+      "Default": "hooklogic-a1-cloudtrail-"
+    },
+    "LambdaBucket": {
+      "Description": "Name of S3 bucket containing lambda deployment packages",
+      "Type": "String",
+      "Default": "hooklogic-a1-lambda-"
+    },
+    "ChefS3Bucket" : {
+      "Description": "Name of S3 bucket containing chef recpies. If using appended region name, do not include.",
+      "Type": "String",
+      "Default": "hooklogic-a1-chef-repo-"
+    },
+    "CommonPublicEC2Key": {
+      "Description": "Common Public EC2 key pair to be used across instances. If using appended region, do not include.",
+      "Type": "String",
+      "Default": "common-public-"
+    },
+    "CommonEC2Key": {
+      "Description": "Common EC2 key pair to be used across instances. If using appended region, do not include.",
+      "Type": "String",
+      "Default": "common-"
+    },
+    "BastionEC2Key": {
+      "Description": "Bastion EC2 key pair to be used across instances publicly reachable instances",
+      "Type": "String",
+      "Default": "bastion-"
+    },
+    "IsMultiAZStack": {
+      "Description":"Determines whether this ASG is configured for a single Availability Zone ('False') or multiple Availability Zones ('True').",
+      "Type":"String",
+      "Default":"True",
+      "AllowedValues" : ["True", "False"],
+      "ConstraintDescription": "Must be 'True' or 'False'."
+    },
+    "Role": {
+      "Description": "Name which will be applied to EC2 instances in the ASG (e.g. 'web' or 'app').",
+      "Type": "String",
+      "Default": "beacon",
+      "ConstraintDescription": "Must be a string."
+    },
+    "InstanceType": {
+      "Description": "The EC2 instance type assigned to the Launch Configuration for EC2 instances in the ASG.",
+      "Type": "String",
+      "Default": "t2.medium",
+      "ConstraintDescription": "Must be a string."
+    },
+    "AMI": {
+      "Description": "The AMI ID assigned to the Launch Configuration for EC2 instances in the ASG.",
+      "Type": "String",
+      "Default": "ami-fce3c696",
+      "ConstraintDescription": "Must be a string."
+    },
+    "BootstrapFileName": {
+      "Description": "The config file name",
+      "Type": "String",
+      "Default": "common.sh",
+      "ConstraintDescription": "Must be a string."
+    },
+    "ChefS3BucketName" : {
+      "Description": "Bucket Chef recipies are stored in",
+      "Type": "String",
+      "Default": "hooklogic-a1-chef-repo-us-east-1"
+    },
+    "AssociatePublicIPAddress": {
+      "Description": "Whether or not the EC2 instances in the ASG will be given a public IP address.",
+      "Type": "String",
+      "Default": "False",
+      "AllowedValues" : ["True", "False"],
+      "ConstraintDescription": "Must be 'True' or 'False'."
+    },
+    "RootEBSVolumeSize": {
+      "Description": "Size in GB of the root volume to attach to this EC2 instance.",
+      "Type": "Number",
+      "Default": "10",
+      "MinValue" : "10",
+      "MaxValue" : "1024"
+    },
+    "EBSVolumeType": {
+      "Description": "Type of EBS volume.",
+      "Type": "String",
+      "Default": "standard",
+      "AllowedValues" : ["standard", "gp2"],
+      "ConstraintDescription": "Must be 'standard' or 'gp2'."
+    },
+    "DeleteEBSVolumesOnTermination": {
+      "Description": "Should the EBS volumes be deleted upon termination.",
+      "Type": "String",
+      "Default": "True",
+      "AllowedValues" : ["True", "False"],
+      "ConstraintDescription": "Must be 'True' or 'False'."
+    },
+    "ASGHealthCheckType": {
+      "Description": "Health check type for the ASG.",
+      "Type": "String",
+      "Default": "EC2",
+      "AllowedValues" : ["EC2"],
+      "ConstraintDescription": "Must be 'EC2'."
+    },
+    "HealthCheckGracePeriod": { 
+      "Description": "The length of time in seconds after a new EC2 instance comes into service that Auto Scaling starts checking its health.",
+      "Type": "Number",
+      "Default": "300",
+      "MinValue": "1",
+      "ConstraintDescription": "Must be an integer."
+    },
+    "DesiredInstancesCount": {
+      "Description": "Desired number of EC2 instances in the ASG.",
+      "Type": "Number",
+      "Default": "2",
+      "MinValue": "0",
+      "MaxValue": "10000"
+    },
+    "MaxInstancesCount": {
+      "Description": "Maximum number of EC2 instances in the ASG.",
+      "Type": "Number",
+      "Default": "2",
+      "MinValue": "0",
+      "MaxValue": "10000"
+    },
+    "MinInstancesCount": {
+      "Description": "Minimum number of EC2 instances in the ASG.",
+      "Type": "Number",
+      "Default": "2",
+      "MinValue": "0",
+      "MaxValue": "1000"
+    },
+    "ScaleUpAdjustment": {
+      "Description": "Number of instances to add when scaling up.",
+      "Type": "Number",
+      "Default": "2"
+    },
+    "ScaleUpCooldown": {
+      "Description": "Number of seconds for cooldown between scale-up events.",
+      "Type": "Number",
+      "Default": "300"
+    },
+    "ScaleDownAdjustment": {
+      "Description": "Number of instances to remove when scaling down. Must be a negative value.",
+      "Type": "String",
+      "Default": "-2"
+    },
+    "ScaleDownCooldown": {
+      "Description": "Number of seconds for cooldown between scale-down events.",
+      "Type": "Number",
+      "Default": "300"
+    },
+    "HighCPUThreshold": {
+      "Description": "Average CPU threshold for scaling up EC2 instances in ASG. (Greater than or equal to)",
+      "Type": "Number",
+      "Default": "75",
+      "MinValue": "1"
+    },
+    "HighCPUPeriod": {
+      "Description": "The time over which the specified statistic is applied. You must specify a time in seconds that is also a multiple of 60.",
+      "Type": "Number",
+      "Default": "60",
+      "MinValue": "60",
+      "ConstraintDescription": "Must be an integer that is a multiple of 60."
+    },
+    "LowCPUThreshold": {
+      "Description": "Average CPU threshold for scaling down EC2 instances in ASG. (Less than or equal to)",
+      "Type": "Number",
+      "Default": "25",
+      "MinValue": "1"
+    },
+    "LowCPUPeriod": {
+      "Description": "The time over which the specified statistic is applied. You must specify a time in seconds that is also a multiple of 60.",
+      "Type": "Number",
+      "Default": "60",
+      "MinValue": "60",
+      "ConstraintDescription": "Must be an integer that is a multiple of 60."
+    },
+    "RollingUpdateMinInstancesInService": {
+      "Description": "Minimum number of EC2 instances to remain in service during rolling update.",
+      "Type": "Number",
+      "Default": "1",
+      "MinValue": "1",
+      "MaxValue": "10000"
+    },
+    "RollingUpdateMaxBatchSize": {
+      "Description": "Maximum number of EC2 instances for batch during rolling update.",
+      "Type": "Number",
+      "Default": "1",
+      "MinValue": "1",
+      "MaxValue": "10000"
+    },
+    "RollingUpdatePauseTime": {
+      "Description": "Amount of time to pause before adding or removing autoscaling instances during rolling update.",
+      "Type": "String",
+      "Default": "PT0M30S"
+    },
+    "IAMInstanceProfile": {
+      "Description":"ARN of the instance profile associated with the IAM role for the instance. The instance profile contains the IAM role.",
+      "Type":"String",
+      "Default":""
+    },
+    "InstanceSubnetAZ1": {
+      "Description":"A list of subnet IDs in your VPC to attach to your EC2 instances.",
+      "Type": "String",
+      "Default": ""
+    },
+    "InstanceSubnetAZ2": {
+      "Description": "A list of subnet IDs in your VPC to attach to your EC2 instances.",
+      "Type": "String",
+      "Default": ""
+    },
+    "InstanceSubnetAZ3": {
+      "Description": "A list of subnet IDs in your VPC to attach to your EC2 instances.",
+      "Type": "String",
+      "Default": ""
+    },
+    "InstanceSecurityGroups": {
+      "Description": "A list of security groups assigned to EC2 instances in the ASG.",
+      "Type": "String",
+      "Default": ""
+    },
+    "CloudWatchAlarmSNSTopic": {
+      "Description": "SNS topic to send AutoScaling Events to.",
+      "Type": "String",
+      "Default": "",
+      "ConstraintDescription": "Must be a string."
+    },
+    "EC2KeyPair": {
+      "Description": "Name of the EC2 key pair assigned to instances in the ASG.",
+      "Type": "String",
+      "Default": "common-us-east-1",
+      "ConstraintDescription": "Must be an existing EC2 key pair."
+    },
+    "BootstrapS3BucketName": {
+      "Description": "The name of the S3 bucket containing provision/bootstrap scripts to be executed within UserData.",
+      "Type": "String",
+      "Default": "hooklogic-a1-bootstrap-us-east-1",
+      "ConstraintDescription": "Must be a string."
+    },
+    "VPCID": {
+      "Description": "The VPC we are attaching the HostedZone to.",
+      "Type": "String",
+      "Default": "",
+      "ConstraintDescription": "Must be a valid VPC ID."
+    },
+    "HostedZoneID": {
+      "Description": "The hosted zone we are attaching to the VPC.",
+      "Type": "String",
+      "Default": "Z19FAM23ILJ9GA",
+      "ConstraintDescription": "Must be a valid hosted zone ID"
+    }
+
+  },
+
+  "Mappings": {
+
+    "Ubuntu": {
+      "us-east-1":      { "1404": "ami-d05e75b8" },
+      "us-west-1":      { "1404": "ami-df6a8b9b" },
+      "us-west-2":      { "1404": "ami-5189a661" },
+      "eu-central-1":   { "1404": "ami-accff2b1" },
+      "eu-west-1":      { "1404": "ami-47a23a30" },
+      "ap-northeast-1": { "1404": "ami-936d9d93" },
+      "ap-southeast-1": { "1404": "ami-96f1c1c4" },
+      "ap-southeast-2": { "1404": "ami-69631053" },
+      "sa-east-1":      { "1404": "ami-4d883350" }
+    }
+
+  },
+
+  "Resources": {
+
+    "Beacon": {
+      "DependsOn":                              [  ],
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": { "Fn::Join": [ "", [ { "Ref" : "CloudFormationBucket" }, { "Ref":"AWS::Region" }, "/common/amzn_linux_asg_temp.json" ] ] },
+        "Parameters": {
+          "IsMultiAZStack":                     {"Ref": "IsMultiAZStack"},
+          "Role":                               {"Ref": "Role"},
+          "Environment":                        {"Ref": "Environment"},
+          "InstanceType":                       {"Ref": "InstanceType"},
+          "BootstrapFileName":                  {"Ref": "BootstrapFileName"},
+          "AssociatePublicIPAddress":           {"Ref": "AssociatePublicIPAddress"},
+          "HostedZoneID":                       {"Ref": "HostedZoneID"},
+          "VPCID":                              {"Ref":"VPCID"},
+          "RootEBSVolumeSize":                  {"Ref":"RootEBSVolumeSize"},
+          "EBSVolumeType":                      {"Ref":"EBSVolumeType"},
+          "DeleteEBSVolumesOnTermination":      {"Ref":"DeleteEBSVolumesOnTermination"},
+          "AMI":                                {"Ref":"AMI"},
+
+          "ASGHealthCheckType":                 {"Ref":"ASGHealthCheckType"},
+          "HealthCheckGracePeriod":             {"Ref":"HealthCheckGracePeriod"},
+          "MaxInstancesCount":                  {"Ref":"MaxInstancesCount"},
+          "MinInstancesCount":                  {"Ref":"MinInstancesCount"},
+          "ScaleUpAdjustment":                  {"Ref":"ScaleUpAdjustment"},
+          "ScaleUpCooldown":                    {"Ref":"ScaleUpCooldown"},
+          "ScaleDownAdjustment":                {"Ref":"ScaleDownAdjustment"},
+          "ScaleDownCooldown":                  {"Ref":"ScaleDownCooldown"},
+
+          "HighCPUThreshold":                   {"Ref":"HighCPUThreshold"},
+          "HighCPUPeriod":                      {"Ref":"HighCPUPeriod"},
+          "LowCPUThreshold":                    {"Ref":"LowCPUThreshold"},
+          "LowCPUPeriod":                       {"Ref":"LowCPUPeriod"},
+
+          "RollingUpdateMinInstancesInService": {"Ref":"RollingUpdateMinInstancesInService"},
+          "RollingUpdateMaxBatchSize":          {"Ref":"RollingUpdateMaxBatchSize"},
+          "RollingUpdatePauseTime":             {"Ref":"RollingUpdatePauseTime"},
+
+          "IAMInstanceProfile":                 {"Ref":"IAMInstanceProfile"},
+          "InstanceSubnetAZ1":                  {"Ref":"InstanceSubnetAZ1"},
+          "InstanceSubnetAZ2":                  {"Ref":"InstanceSubnetAZ2"},
+          "InstanceSubnetAZ3":                  {"Ref":"InstanceSubnetAZ3"},
+          "InstanceSecurityGroups":             {"Ref":"InstanceSecurityGroups"},
+
+          "CloudWatchAlarmSNSTopic":            {"Ref":"CloudWatchAlarmSNSTopic"},
+          "EC2KeyPair":                         {"Ref":"EC2KeyPair"},
+          "BootstrapS3BucketName":              {"Ref":"BootstrapS3BucketName"},
+          "ChefS3BucketName":                   {"Ref":"ChefS3BucketName"},
+          "ProductName":                        {"Ref": "ProductName"}
+        }
+      }
+    }
+
+  },
+
+  "Outputs": {}
+}

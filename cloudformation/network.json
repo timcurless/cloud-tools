@@ -1,0 +1,1508 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Network",
+  "Parameters": {
+    "UATVPCID": {
+      "Description": "The VPC Id of the UAT VPC",
+      "Type": "String",
+      "Default": "fill in"
+    },
+    "UATVPCCIDR": {
+      "Description": "Ahead secondary CIDR",
+      "Type": "String",
+      "Default": "The CIDR Range of the UAT VPC"
+    },
+    "Environment": {
+      "Description": "The application environment",
+      "Type": "String",
+      "Default": "PROD"
+    },
+    "ProductName": {
+      "Description": ".",
+      "Type": "String",
+      "Default": "BagApp"
+    },
+    "DomainName": {
+      "Description": "Domain name used for DHCP options.",
+      "Type": "String",
+      "Default": "domain.internal",
+      "ConstraintDescription": "Must be a string."
+    },
+    "SecondaryVPCID": {
+      "Description": "Ahead secondary VPCID",
+      "Type": "String",
+      "Default": ""
+    },
+    "SecondaryVPCCIDR": {
+      "Description": "Ahead secondary VPCID",
+      "Type": "String",
+      "Default": ""
+    }
+  },
+  "Mappings": {
+    "SubnetConfig": {
+      "VPC": {
+        "CIDR": "10.1.0.0/17"
+      },
+      "MANAGEMENT-PUBLIC-AZ1": {
+        "CIDR": "10.1.0.0/21"
+      },
+      "MANAGEMENT-PUBLIC-AZ2": {
+        "CIDR": "10.1.8.0/21"
+      },
+      "MANAGEMENT-PUBLIC-AZ3": {
+        "CIDR": "10.1.16.0/21"
+      },
+      "MANAGEMENT-PRIVATE-AZ1": {
+        "CIDR": "10.1.24.0/21"
+      },
+      "MANAGEMENT-PRIVATE-AZ2": {
+        "CIDR": "10.1.32.0/21"
+      },
+      "MANAGEMENT-PRIVATE-AZ3": {
+        "CIDR": "10.1.40.0/21"
+      },
+      "PUBLIC-AZ1": {
+        "CIDR": "10.1.48.0/21"
+      },
+      "PUBLIC-AZ2": {
+        "CIDR": "10.1.56.0/21"
+      },
+      "PUBLIC-AZ3": {
+        "CIDR": "10.1.64.0/21"
+      },
+      "PRIVATE-AZ1": {
+        "CIDR": "10.1.72.0/21"
+      },
+      "PRIVATE-AZ2": {
+        "CIDR": "10.1.80.0/21"
+      },
+      "PRIVATE-AZ3": {
+        "CIDR": "10.1.88.0/21"
+      },
+      "DATA-AZ1": {
+        "CIDR": "10.1.96.0/21"
+      },
+      "DATA-AZ2": {
+        "CIDR": "10.1.104.0/21"
+      },
+      "DATA-AZ3": {
+        "CIDR": "10.1.112.0/21"
+      }
+    }
+  },
+  "Resources": {
+    "InternetGateway": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Ref": "Environment"
+            }
+          }
+        ]
+      }
+    },
+    "GatewayToInternet": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "InternetGatewayId": {
+          "Ref": "InternetGateway"
+        }
+      }
+    },
+    "VPC": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "SubnetConfig",
+            "VPC",
+            "CIDR"
+          ]
+        },
+        "EnableDnsSupport": "True",
+        "EnableDnsHostnames": "True",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ProductName"
+                  },
+                  "-",
+                  "VPC",
+                  {
+                    "Ref": "Environment"
+                  }
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "ManagementPublicAz1Subnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "SubnetConfig",
+            "MANAGEMENT-PUBLIC-AZ1",
+            "CIDR"
+          ]
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            "0",
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ProductName"
+                  },
+                  "-",
+                  "ManagementPublicAz1Subnet",
+                  "-",
+                  {
+                    "Ref": "Environment"
+                  }
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "ManagementPublicAz2Subnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "SubnetConfig",
+            "MANAGEMENT-PUBLIC-AZ2",
+            "CIDR"
+          ]
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            "1",
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ProductName"
+                  },
+                  "-",
+                  "ManagementPublicAz2Subnet",
+                  "-",
+                  {
+                    "Ref": "Environment"
+                  }
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "ManagementPublicAz3Subnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "SubnetConfig",
+            "MANAGEMENT-PUBLIC-AZ3",
+            "CIDR"
+          ]
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            "2",
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ProductName"
+                  },
+                  "-",
+                  "ManagementPublicAz3Subnet",
+                  "-",
+                  {
+                    "Ref": "Environment"
+                  }
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "ManagementPrivateAz1Subnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "SubnetConfig",
+            "MANAGEMENT-PRIVATE-AZ1",
+            "CIDR"
+          ]
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            "0",
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ProductName"
+                  },
+                  "-",
+                  "ManagementPrivateAz1Subnet",
+                  "-",
+                  {
+                    "Ref": "Environment"
+                  }
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "ManagementPrivateAz2Subnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "SubnetConfig",
+            "MANAGEMENT-PRIVATE-AZ2",
+            "CIDR"
+          ]
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            "1",
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ProductName"
+                  },
+                  "-",
+                  "ManagementPrivateAz2Subnet",
+                  "-",
+                  {
+                    "Ref": "Environment"
+                  }
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "ManagementPrivateAz3Subnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "SubnetConfig",
+            "MANAGEMENT-PRIVATE-AZ3",
+            "CIDR"
+          ]
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            "2",
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ProductName"
+                  },
+                  "-",
+                  "ManagementPrivateAz3Subnet",
+                  "-",
+                  {
+                    "Ref": "Environment"
+                  }
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "PublicAz1Subnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "SubnetConfig",
+            "PUBLIC-AZ1",
+            "CIDR"
+          ]
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            "0",
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ProductName"
+                  },
+                  "-",
+                  "PublicAz1Subnet",
+                  "-",
+                  {
+                    "Ref": "Environment"
+                  }
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "PublicAz2Subnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "SubnetConfig",
+            "PUBLIC-AZ2",
+            "CIDR"
+          ]
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            "1",
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ProductName"
+                  },
+                  "-",
+                  "PublicAz2Subnet",
+                  "-",
+                  {
+                    "Ref": "Environment"
+                  }
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "PublicAz3Subnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "SubnetConfig",
+            "PUBLIC-AZ3",
+            "CIDR"
+          ]
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            "2",
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ProductName"
+                  },
+                  "-",
+                  "PublicAz3Subnet",
+                  "-",
+                  {
+                    "Ref": "Environment"
+                  }
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "PrivateAz1Subnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "SubnetConfig",
+            "PRIVATE-AZ1",
+            "CIDR"
+          ]
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            "0",
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ProductName"
+                  },
+                  "-",
+                  "PrivateAz1Subnet",
+                  "-",
+                  {
+                    "Ref": "Environment"
+                  }
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "PrivateAz2Subnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "SubnetConfig",
+            "PRIVATE-AZ2",
+            "CIDR"
+          ]
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            "1",
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ProductName"
+                  },
+                  "-",
+                  "PrivateAz2Subnet",
+                  "-",
+                  {
+                    "Ref": "Environment"
+                  }
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "PrivateAz3Subnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "SubnetConfig",
+            "PRIVATE-AZ3",
+            "CIDR"
+          ]
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            "2",
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ProductName"
+                  },
+                  "-",
+                  "PrivateAz3Subnet",
+                  "-",
+                  {
+                    "Ref": "Environment"
+                  }
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "DataAz1Subnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "SubnetConfig",
+            "DATA-AZ1",
+            "CIDR"
+          ]
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            "0",
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ProductName"
+                  },
+                  "-",
+                  "DataAz1Subnet",
+                  "-",
+                  {
+                    "Ref": "Environment"
+                  }
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "DataAz2Subnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "SubnetConfig",
+            "DATA-AZ2",
+            "CIDR"
+          ]
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            "1",
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ProductName"
+                  },
+                  "-",
+                  "DataAz2Subnet",
+                  "-",
+                  {
+                    "Ref": "Environment"
+                  }
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "DataAz3Subnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "SubnetConfig",
+            "DATA-AZ3",
+            "CIDR"
+          ]
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            "2",
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ProductName"
+                  },
+                  "-",
+                  "DataAz3Subnet",
+                  "-",
+                  {
+                    "Ref": "Environment"
+                  }
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "PublicRouteTable": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ProductName"
+                  },
+                  "-",
+                  "PublicRouteTable",
+                  "-",
+                  {
+                    "Ref": "Environment"
+                  }
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "PublicRoute": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "PublicRouteTable"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "InternetGateway"
+        }
+      }
+    },
+    "PublicSubnetRouteTableAssociationManagementPublicAz1": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "ManagementPublicAz1Subnet"
+        },
+        "RouteTableId": {
+          "Ref": "PublicRouteTable"
+        }
+      }
+    },
+    "PublicSubnetRouteTableAssociationManagementPublicAz2": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "ManagementPublicAz2Subnet"
+        },
+        "RouteTableId": {
+          "Ref": "PublicRouteTable"
+        }
+      }
+    },
+    "PublicSubnetRouteTableAssociationManagementPublicAz3": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "ManagementPublicAz3Subnet"
+        },
+        "RouteTableId": {
+          "Ref": "PublicRouteTable"
+        }
+      }
+    },
+    "PublicSubnetRouteTableAssociationPublicAz1": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "PublicAz1Subnet"
+        },
+        "RouteTableId": {
+          "Ref": "PublicRouteTable"
+        }
+      }
+    },
+    "PublicSubnetRouteTableAssociationPublicAz2": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "PublicAz2Subnet"
+        },
+        "RouteTableId": {
+          "Ref": "PublicRouteTable"
+        }
+      }
+    },
+    "PublicSubnetRouteTableAssociationPublicAz3": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "PublicAz3Subnet"
+        },
+        "RouteTableId": {
+          "Ref": "PublicRouteTable"
+        }
+      }
+    },
+    "PrivateRouteTableAz1": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ProductName"
+                  },
+                  "-",
+                  "PrivateRouteTableAz1",
+                  "-",
+                  {
+                    "Ref": "Environment"
+                  }
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "PublicRouteForPrivateRouteTableAz1": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "PrivateRouteTableAz1"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": {
+          "Ref": "NatGatewayAz1"
+        }
+      }
+    },
+    "PrivateSubnetRouteTableAssociationManagementPrivateAz1": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "ManagementPrivateAz1Subnet"
+        },
+        "RouteTableId": {
+          "Ref": "PrivateRouteTableAz1"
+        }
+      }
+    },
+    "PrivateSubnetRouteTableAssociationPrivateAz1": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "PrivateAz1Subnet"
+        },
+        "RouteTableId": {
+          "Ref": "PrivateRouteTableAz1"
+        }
+      }
+    },
+    "PrivateSubnetRouteTableAssociationDataAz1": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "DataAz1Subnet"
+        },
+        "RouteTableId": {
+          "Ref": "PrivateRouteTableAz1"
+        }
+      }
+    },
+    "PrivateRouteTableAz2": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ProductName"
+                  },
+                  "-",
+                  "PrivateRouteTableAz2",
+                  "-",
+                  {
+                    "Ref": "Environment"
+                  }
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "PublicRouteForPrivateRouteTableAz2": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "PrivateRouteTableAz2"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": {
+          "Ref": "NatGatewayAz2"
+        }
+      }
+    },
+    "PrivateSubnetRouteTableAssociationManagementPrivateAz2": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "ManagementPrivateAz2Subnet"
+        },
+        "RouteTableId": {
+          "Ref": "PrivateRouteTableAz2"
+        }
+      }
+    },
+    "PrivateSubnetRouteTableAssociationPrivateAz2": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "PrivateAz2Subnet"
+        },
+        "RouteTableId": {
+          "Ref": "PrivateRouteTableAz2"
+        }
+      }
+    },
+    "PrivateSubnetRouteTableAssociationDataAz2": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "DataAz2Subnet"
+        },
+        "RouteTableId": {
+          "Ref": "PrivateRouteTableAz2"
+        }
+      }
+    },
+    "PrivateRouteTableAz3": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ProductName"
+                  },
+                  "-",
+                  "PrivateRouteTableAz3",
+                  "-",
+                  {
+                    "Ref": "Environment"
+                  }
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "PublicRouteForPrivateRouteTableAz3": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "PrivateRouteTableAz3"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": {
+          "Ref": "NatGatewayAz3"
+        }
+      }
+    },
+    "PrivateSubnetRouteTableAssociationManagementPrivateAz3": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "ManagementPrivateAz3Subnet"
+        },
+        "RouteTableId": {
+          "Ref": "PrivateRouteTableAz3"
+        }
+      }
+    },
+    "PrivateSubnetRouteTableAssociationPrivateAz3": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "PrivateAz3Subnet"
+        },
+        "RouteTableId": {
+          "Ref": "PrivateRouteTableAz3"
+        }
+      }
+    },
+    "PrivateSubnetRouteTableAssociationDataAz3": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "DataAz3Subnet"
+        },
+        "RouteTableId": {
+          "Ref": "PrivateRouteTableAz3"
+        }
+      }
+    },
+    "DhcpOptions": {
+      "Type": "AWS::EC2::DHCPOptions",
+      "Properties": {
+        "DomainName": {
+          "Ref": "DomainName"
+        },
+        "DomainNameServers": [
+          "AmazonProvidedDNS"
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ProductName"
+                  },
+                  "-",
+                  "DhcpOptions",
+                  "-",
+                  {
+                    "Ref": "Environment"
+                  }
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "DHCPOptionsAssociation": {
+      "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "DhcpOptionsId": {
+          "Ref": "DhcpOptions"
+        }
+      }
+    },
+    "NATSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Enable communication to the NAT gateway(s).",
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "icmp",
+            "FromPort": "-1",
+            "ToPort": "-1",
+            "CidrIp": {
+              "Fn::FindInMap": [
+                "SubnetConfig",
+                "VPC",
+                "CIDR"
+              ]
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "0",
+            "ToPort": "65535",
+            "CidrIp": {
+              "Fn::FindInMap": [
+                "SubnetConfig",
+                "VPC",
+                "CIDR"
+              ]
+            }
+          },
+          {
+            "IpProtocol": "udp",
+            "FromPort": "0",
+            "ToPort": "65535",
+            "CidrIp": {
+              "Fn::FindInMap": [
+                "SubnetConfig",
+                "VPC",
+                "CIDR"
+              ]
+            }
+          }
+        ],
+        "SecurityGroupEgress": [
+          {
+            "IpProtocol": "icmp",
+            "FromPort": "-1",
+            "ToPort": "-1",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "udp",
+            "FromPort": "0",
+            "ToPort": "65535",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "0",
+            "ToPort": "65535",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  "NATSecurityGroup",
+                  "-",
+                  {
+                    "Ref": "Environment"
+                  }
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "EipNatGWAz1": {
+      "Type": "AWS::EC2::EIP",
+      "Properties": {
+        "Domain": "vpc"
+      }
+    },
+    "EipNatGWAz2": {
+      "Type": "AWS::EC2::EIP",
+      "Properties": {
+        "Domain": "vpc"
+      }
+    },
+    "EipNatGWAz3": {
+      "Type": "AWS::EC2::EIP",
+      "Properties": {
+        "Domain": "vpc"
+      }
+    },
+    "NatGatewayAz1": {
+      "Type": "AWS::EC2::NatGateway",
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "EipNatGWAz1",
+            "AllocationId"
+          ]
+        },
+        "SubnetId": {
+          "Ref": "ManagementPublicAz1Subnet"
+        }
+      }
+    },
+    "NatGatewayAz2": {
+      "Type": "AWS::EC2::NatGateway",
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "EipNatGWAz2",
+            "AllocationId"
+          ]
+        },
+        "SubnetId": {
+          "Ref": "ManagementPublicAz2Subnet"
+        }
+      }
+    },
+    "NatGatewayAz3": {
+      "Type": "AWS::EC2::NatGateway",
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "EipNatGWAz3",
+            "AllocationId"
+          ]
+        },
+        "SubnetId": {
+          "Ref": "ManagementPublicAz3Subnet"
+        }
+      }
+    },
+    "RDSSubnetGroup": {
+      "Type": "AWS::RDS::DBSubnetGroup",
+      "Properties": {
+        "DBSubnetGroupDescription": "Subnets for production RDS.",
+        "SubnetIds": [
+          {
+            "Ref": "DataAz1Subnet"
+          },
+          {
+            "Ref": "DataAz2Subnet"
+          },
+          {
+            "Ref": "DataAz3Subnet"
+          }
+        ]
+      }
+    },
+    "ElastiCacheSubnetGroup": {
+      "Type": "AWS::ElastiCache::SubnetGroup",
+      "Properties": {
+        "Description": "Production ElastiCache subnet group",
+        "SubnetIds": [
+          {
+            "Ref": "DataAz1Subnet"
+          },
+          {
+            "Ref": "DataAz2Subnet"
+          },
+          {
+            "Ref": "DataAz3Subnet"
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "VPC": {
+      "Description": "ID of VPC",
+      "Value": {
+        "Ref": "VPC"
+      }
+    },
+    "NATSecurityGroup": {
+      "Description": "ID of the NAT security group.",
+      "Value": {
+        "Ref": "NATSecurityGroup"
+      }
+    },
+    "PrivateRouteTableAz1": {
+      "Description": "ID of PrivateRouteTableAz1 .",
+      "Value": {
+        "Ref": "PrivateRouteTableAz1"
+      }
+    },
+    "PrivateRouteTableAz2": {
+      "Description": "ID of PrivateRouteTableAz2 .",
+      "Value": {
+        "Ref": "PrivateRouteTableAz2"
+      }
+    },
+    "PrivateRouteTableAz3": {
+      "Description": "ID of PrivateRouteTableAz3 .",
+      "Value": {
+        "Ref": "PrivateRouteTableAz3"
+      }
+    },
+    "PublicRouteTable": {
+      "Description": "ID of PublicRouteTable .",
+      "Value": {
+        "Ref": "PublicRouteTable"
+      }
+    },
+    "VPCSubnet": {
+      "Description": "VPC CIDR block.",
+      "Value": {
+        "Fn::FindInMap": [
+          "SubnetConfig",
+          "VPC",
+          "CIDR"
+        ]
+      }
+    },
+    "ManagementPublicAz1Subnet": {
+      "Description": "ID of ManagementPublicAz1Subnet.",
+      "Value": {
+        "Ref": "ManagementPublicAz1Subnet"
+      }
+    },
+    "ManagementPublicAz2Subnet": {
+      "Description": "ID of ManagementPublicAz2Subnet.",
+      "Value": {
+        "Ref": "ManagementPublicAz2Subnet"
+      }
+    },
+    "ManagementPublicAz3Subnet": {
+      "Description": "ID of ManagementPublicAz3Subnet",
+      "Value": {
+        "Ref": "ManagementPublicAz3Subnet"
+      }
+    },
+    "ManagementPrivateAz1Subnet": {
+      "Description": "ID of ManagementPrivateAz1Subnet.",
+      "Value": {
+        "Ref": "ManagementPrivateAz1Subnet"
+      }
+    },
+    "ManagementPrivateAz2Subnet": {
+      "Description": "ID of ManagementPrivateAz2Subnet.",
+      "Value": {
+        "Ref": "ManagementPrivateAz2Subnet"
+      }
+    },
+    "ManagementPrivateAz3Subnet": {
+      "Description": "ID of ManagementPrivateAz3Subnet",
+      "Value": {
+        "Ref": "ManagementPrivateAz3Subnet"
+      }
+    },
+    "PublicAz1Subnet": {
+      "Description": "ID of PublicAz1Subnet",
+      "Value": {
+        "Ref": "PublicAz1Subnet"
+      }
+    },
+    "PublicAz2Subnet": {
+      "Description": "ID of PublicAz2Subnet",
+      "Value": {
+        "Ref": "PublicAz2Subnet"
+      }
+    },
+    "PublicAz3Subnet": {
+      "Description": "ID of PublicAz3Subnet",
+      "Value": {
+        "Ref": "PublicAz3Subnet"
+      }
+    },
+    "PrivateAz1Subnet": {
+      "Description": "ID of PrivateAz1Subnet",
+      "Value": {
+        "Ref": "PrivateAz1Subnet"
+      }
+    },
+    "PrivateAz2Subnet": {
+      "Description": "ID of PrivateAz2Subnet",
+      "Value": {
+        "Ref": "PrivateAz2Subnet"
+      }
+    },
+    "PrivateAz3Subnet": {
+      "Description": "ID of PrivateAz3Subnet.",
+      "Value": {
+        "Ref": "PrivateAz3Subnet"
+      }
+    },
+    "DataAz1Subnet": {
+      "Description": "ID of DataAz1Subnet.",
+      "Value": {
+        "Ref": "DataAz1Subnet"
+      }
+    },
+    "DataAz2Subnet": {
+      "Description": "ID of DataAz2Subnet",
+      "Value": {
+        "Ref": "DataAz2Subnet"
+      }
+    },
+    "DataAz3Subnet": {
+      "Description": "ID of DataAz3Subnet",
+      "Value": {
+        "Ref": "DataAz3Subnet"
+      }
+    },
+    "ElastiCacheSubnetGroup": {
+      "Description": "ID of ElastiCacheSubnetGroup",
+      "Value": {
+        "Ref": "ElastiCacheSubnetGroup"
+      }
+    }
+  }
+}
