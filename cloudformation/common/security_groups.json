@@ -4,27 +4,27 @@
 
   "Parameters" : {
     "PLAYVPCCIDR": {
-      "Description": "HookLogic UAT VPC CIDR",
+      "Description": "Ahead UAT VPC CIDR",
       "Type": "String",
        "Default": "10.3.128.0/17"
     },
     "DEVVPCCIDR": {
-      "Description": "HookLogic UAT VPC CIDR",
+      "Description": "Ahead UAT VPC CIDR",
       "Type": "String",
        "Default": "10.3.0.0/17"
     },
     "UATVPCCIDR": {
-      "Description": "HookLogic secondary CIDR",
+      "Description": "Ahead secondary CIDR",
       "Type": "String",
        "Default": "10.4.128.0/17"
     },
     "PRODVPCCIDR": {
-      "Description": "HookLogic secondary CIDR",
+      "Description": "Ahead secondary CIDR",
       "Type": "String",
        "Default": "10.4.0.0/17"
     },
     "ProductName": {
-      "Description": "The Hook Logic Product name",
+      "Description": "The Ahead Product name",
       "Type": "String",
       "Default": "HL"
     },
@@ -56,8 +56,8 @@
       "AllowedPattern" : "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
       "ConstraintDescription" : "Must be valid CIDR notation (i.e. x.x.x.x/x)."
     },
-    "RBNOpsCIDR" : {
-      "Description" : "CIDR block of the RBN-Ops account. Used for VPC peering.",
+    "AheadOpsCIDR" : {
+      "Description" : "CIDR block of the Ahead-Ops account. Used for VPC peering.",
       "Type" : "String",
       "MinLength" : "9",
       "MaxLength" : "18",
@@ -114,112 +114,7 @@
       }
     },
 
-    "FTPSecurityGroup" : {
-      "Type" : "AWS::EC2::SecurityGroup",
-      "Properties" : {
-        "GroupDescription" : "Enable communication to the common host",
-        "VpcId" : { "Ref" : "VPCID" },
-        "SecurityGroupIngress" : [
-          { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref": "VPCCIDR" } },
-          { "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0" },
-          { "IpProtocol" : "icmp", "FromPort" : "20", "ToPort" : "21", "CidrIp" : { "Ref": "VPCCIDR" } },
-          { "IpProtocol" : "tcp", "FromPort" : "900", "ToPort" : "900", "CidrIp" : { "Ref": "VPCCIDR" } }
-        ],
-        "SecurityGroupEgress" : [
-          { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : "0.0.0.0/0" },
-          { "IpProtocol" : "udp", "FromPort" : "0",  "ToPort" : "65535",  "CidrIp" : "0.0.0.0/0" },
-          { "IpProtocol" : "tcp", "FromPort" : "0",  "ToPort" : "65535",  "CidrIp" : "0.0.0.0/0" }
-        ],
-        "Tags" : [
-          { "Key" : "Product", "Value" : { "Ref": "ProductName" } },
-          { "Key" : "Name", "Value": { "Fn::Join": [ "", [ "FTP", "-", {"Ref":"Environment"} ] ] } }
-        ]
-      }
-    },
 
-    "HaproxySecurityGroup" : {
-      "Type" : "AWS::EC2::SecurityGroup",
-      "Properties" : {
-        "GroupDescription" : "Enable communication to the common host",
-        "VpcId" : { "Ref" : "VPCID" },
-        "SecurityGroupIngress" : [
-          { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref": "VPCCIDR" } },
-          { "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref": "VPCCIDR" } }
-        ],
-        "SecurityGroupEgress" : [
-          { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : "0.0.0.0/0" },
-          { "IpProtocol" : "udp", "FromPort" : "0",  "ToPort" : "65535",  "CidrIp" : "0.0.0.0/0" },
-          { "IpProtocol" : "tcp", "FromPort" : "0",  "ToPort" : "65535",  "CidrIp" : "0.0.0.0/0" }
-        ],
-        "Tags" : [
-          { "Key" : "Product", "Value" : { "Ref": "ProductName" } },
-          { "Key" : "Name", "Value": { "Fn::Join": [ "", [ "Haproxy", "-", {"Ref":"Environment"} ] ] } }
-        ]
-      }
-    },
-
-    "BeaconSecurityGroup" : {
-      "Type" : "AWS::EC2::SecurityGroup",
-      "Properties" : {
-        "GroupDescription" : "Enable communication to the common host",
-        "VpcId" : { "Ref" : "VPCID" },
-        "SecurityGroupIngress" : [
-          { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref": "VPCCIDR" } },
-          { "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref": "VPCCIDR" } }
-        ],
-        "SecurityGroupEgress" : [
-          { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : "0.0.0.0/0" },
-          { "IpProtocol" : "udp", "FromPort" : "0",  "ToPort" : "65535",  "CidrIp" : "0.0.0.0/0" },
-          { "IpProtocol" : "tcp", "FromPort" : "0",  "ToPort" : "65535",  "CidrIp" : "0.0.0.0/0" }
-        ],
-        "Tags" : [
-          { "Key" : "Product", "Value" : { "Ref": "ProductName" } },
-          { "Key" : "Name", "Value": { "Fn::Join": [ "", [ "Beacon", "-", {"Ref":"Environment"} ] ] } }
-        ]
-      }
-    },
-
-    "DeliverySecurityGroup" : {
-      "Type" : "AWS::EC2::SecurityGroup",
-      "Properties" : {
-        "GroupDescription" : "Enable communication to the common host",
-        "VpcId" : { "Ref" : "VPCID" },
-        "SecurityGroupIngress" : [
-          { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref": "VPCCIDR" } },
-          { "IpProtocol" : "tcp", "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Ref": "VPCCIDR" } }
-        ],
-        "SecurityGroupEgress" : [
-          { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : "0.0.0.0/0" },
-          { "IpProtocol" : "udp", "FromPort" : "0",  "ToPort" : "65535",  "CidrIp" : "0.0.0.0/0" },
-          { "IpProtocol" : "tcp", "FromPort" : "0",  "ToPort" : "65535",  "CidrIp" : "0.0.0.0/0" }
-        ],
-        "Tags" : [
-          { "Key" : "Product", "Value" : { "Ref": "ProductName" } },
-          { "Key" : "Name", "Value": { "Fn::Join": [ "", [ "Delivery", "-", {"Ref":"Environment"} ] ] } }
-        ]
-      }
-    },
-
-    "PushbidSecurityGroup" : {
-      "Type" : "AWS::EC2::SecurityGroup",
-      "Properties" : {
-        "GroupDescription" : "Enable communication to the common host",
-        "VpcId" : { "Ref" : "VPCID" },
-        "SecurityGroupIngress" : [
-          { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref": "VPCCIDR" } },
-          { "IpProtocol" : "tcp", "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Ref": "VPCCIDR" } }
-        ],
-        "SecurityGroupEgress" : [
-          { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : "0.0.0.0/0" },
-          { "IpProtocol" : "udp", "FromPort" : "0",  "ToPort" : "65535",  "CidrIp" : "0.0.0.0/0" },
-          { "IpProtocol" : "tcp", "FromPort" : "0",  "ToPort" : "65535",  "CidrIp" : "0.0.0.0/0" }
-        ],
-        "Tags" : [
-          { "Key" : "Product", "Value" : { "Ref": "ProductName" } },
-          { "Key" : "Name", "Value": { "Fn::Join": [ "", [ "Pushbid", "-", {"Ref":"Environment"} ] ] } }
-        ]
-      }
-    },
 
     "JenkinsSecurityGroup" : {
       "Type" : "AWS::EC2::SecurityGroup",
@@ -268,25 +163,6 @@
       }
     },
 
-    "ProdDB4SecurityGroup" : {
-      "Type" : "AWS::EC2::SecurityGroup",
-      "Properties" : {
-        "GroupDescription" : "Enable communication to the rds host",
-        "VpcId" : { "Ref" : "VPCID" },
-        "SecurityGroupIngress" : [
-          { "IpProtocol" : "tcp", "FromPort" : "1433", "ToPort" : "1433", "CidrIp" : { "Ref": "VPCCIDR" } }
-        ],
-        "SecurityGroupEgress" : [
-          { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : "0.0.0.0/0" },
-          { "IpProtocol" : "udp", "FromPort" : "0",  "ToPort" : "65535",  "CidrIp" : "0.0.0.0/0" },
-          { "IpProtocol" : "tcp", "FromPort" : "0",  "ToPort" : "65535",  "CidrIp" : "0.0.0.0/0" }
-        ],
-        "Tags" : [
-          { "Key" : "Product", "Value" : { "Ref": "ProductName" } },
-          { "Key" : "Name", "Value": { "Fn::Join": [ "", [ "ProdDB4", "-", {"Ref":"Environment"} ] ] } }
-        ]
-      }
-    },
 
     "PackerSecurityGroup" : {
       "Type" : "AWS::EC2::SecurityGroup",
@@ -322,26 +198,6 @@
     "CommonSecurityGroup" : {
       "Description" : "ID of the common security group",
       "Value" : { "Ref" : "CommonSecurityGroup" }
-    },
-    "FTPSecurityGroup" : {
-      "Description" : "ID of the ftpn security group",
-      "Value" : { "Ref" : "FTPSecurityGroup" }
-    },
-    "HaproxySecurityGroup" : {
-      "Description" : "ID of the haproxy security group",
-      "Value" : { "Ref" : "HaproxySecurityGroup" }
-    },
-    "BeaconSecurityGroup" : {
-      "Description" : "ID of the beacon security group",
-      "Value" : { "Ref" : "BeaconSecurityGroup" }
-    },
-    "DeliverySecurityGroup" : {
-      "Description" : "ID of the delivery security group",
-      "Value" : { "Ref" : "DeliverySecurityGroup" }
-    },
-    "PushbidSecurityGroup" : {
-      "Description" : "ID of the pushbid security group",
-      "Value" : { "Ref" : "PushbidSecurityGroup" }
     },
     "JenkinsSecurityGroup" : {
       "Description" : "ID of the jenkins security group",

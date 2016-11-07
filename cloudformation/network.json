@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Network",
+  "Description": "Network CloudFormation Stack",
   "Parameters": {
     "UATVPCID": {
       "Description": "The VPC Id of the UAT VPC",

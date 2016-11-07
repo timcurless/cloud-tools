@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Backend Lambda PushModel Function Template",
+  "Description": "Lambda Function (Push) CloudFormation Stack",
   "Parameters": {
     "LambdaFunctionHandler": {
       "Description": "The handler for your Lambda function",

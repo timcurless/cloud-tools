@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "ASG and ELB",
+  "Description": "ASG and ELB CloudFormation Stack",
 
   "Parameters": {
     "IsMultiAZStack": {
