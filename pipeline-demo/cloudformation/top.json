@@ -16,7 +16,7 @@
     "BootstrapBucket": {
       "Description": "Name of S3 bucket containing bootstrap scripts. If using appended region name, do not include.",
       "Type": "String",
-      "Default": "ahead-awstools-us-east-1"
+      "Default": "ahead-aws-tools"
     },
     "CloudToolsBucket": {
       "Description": "Name of S3 bucket containing CloudFormation templates. If using appended region name, do not include.",
