@@ -8,16 +8,6 @@
       "Type": "String",
       "Default": "Prod"
     },
-    "UATVPCID": {
-      "Description": "Ahead UAT VPC Id",
-      "Type": "String",
-      "Default": "fill in"
-    },
-    "UATVPCCIDR": {
-      "Description": "Ahead UAT VPC CIDR",
-      "Type": "String",
-       "Default": "fill in"
-    },
     "ProductName": {
       "Description": ".",
       "Type": "String",
@@ -31,7 +21,7 @@
     "CloudToolsBucket": {
       "Description": "Name of S3 bucket containing CloudFormation templates. If using appended region name, do not include.",
       "Type": "String",
-      "Default": "ahead-awstools"
+      "Default": "ahead-aws-tools"
     },
     "CloudTrailsBucket": {
       "Description": "Name of S3 bucket containing CloudTrail logs. If using appended region name, do not include.",
@@ -41,12 +31,12 @@
     "LambdaBucket": {
       "Description": "Name of S3 bucket containing lambda deployment packages",
       "Type": "String",
-      "Default": "ahead-awstools"
+      "Default": "ahead-aws-tools"
     },
     "ChefS3Bucket" : {
       "Description": "Name of S3 bucket containing chef recpies. If using appended region name, do not include.",
       "Type": "String",
-      "Default": "ahead-awstools"
+      "Default": "ahead-aws-tools"
     },
     "CommonPublicEC2Key": {
       "Description": "Common Public EC2 key pair to be used across instances. If using appended region, do not include.",
@@ -56,7 +46,7 @@
     "CommonEC2Key": {
       "Description": "Common EC2 key pair to be used across instances. If using appended region, do not include.",
       "Type": "String",
-      "Default": "common-"
+      "Default": "vito-dev"
     },
     "BastionEC2Key": {
       "Description": "Bastion EC2 key pair to be used across instances publicly reachable instances",
@@ -124,7 +114,7 @@
     "Network": {
       "Type": "AWS::CloudFormation::Stack",
       "Properties": {
-        "TemplateURL":                         {"Fn::Join": [ "", ["https://s3.amazonaws.com/", {"Ref": "CloudToolsBucket"}, {"Ref": "AWS::Region"}, "/cloudformation/",  "network.json"]] },
+        "TemplateURL":                         {"Fn::Join": [ "", ["https://s3.amazonaws.com/", {"Ref": "CloudToolsBucket"}, "-", {"Ref": "AWS::Region"}, "/cloudformation/",  "network.json"]] },
         "Parameters": {
           "ProductName":                       { "Ref": "ProductName" },
           "DomainName":                        "ahead.internal",
@@ -136,7 +126,7 @@
     "SNS": {
           "Type": "AWS::CloudFormation::Stack",
           "Properties": {
-            "TemplateURL": { "Fn::Join": [ "", [ "https://s3.amazonaws.com/", {"Ref": "CloudToolsBucket"}, {"Ref": "AWS::Region"}, "/cloudformation/",  "sns.json" ] ] },
+            "TemplateURL": { "Fn::Join": [ "", [ "https://s3.amazonaws.com/", {"Ref": "CloudToolsBucket"}, "-", {"Ref": "AWS::Region"}, "/cloudformation/",  "sns.json" ] ] },
             "Parameters": {
                 "PrimaryEmailAddress": "vito.brooks@thinkahead.com",
                 "PrimarySNSDisplayName": "Ahead-Primary"
@@ -150,7 +140,7 @@
     "IAM": {
       "Type": "AWS::CloudFormation::Stack",
       "Properties": {
-        "TemplateURL":                          { "Fn::Join": [ "", [ { "Ref" : "CloudToolsBucket" }, { "Ref":"AWS::Region" }, "/common/", "iam.json" ] ] },
+        "TemplateURL":                          { "Fn::Join": [ "", [ { "Ref" : "CloudToolsBucket" }, "-", { "Ref":"AWS::Region" }, "/common/", "iam.json" ] ] },
         "Parameters": {
           "CloudtrailS3BucketARN":              { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref" : "CloudTrailsBucket" }, { "Ref":"AWS::Region" } ] ] },
           "BootstrapS3BucketARN":               { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref" : "BootstrapBucket" }, { "Ref":"AWS::Region" } ] ] },
@@ -166,7 +156,7 @@
       "DependsOn": [  ],
       "Type": "AWS::CloudFormation::Stack",
       "Properties": {
-        "TemplateURL":                          {"Fn::Join": [ "", ["https://s3.amazonaws.com/", {"Ref": "CloudToolsBucket"}, {"Ref": "AWS::Region"}, "/cloudformation/common/",  "amzn_linux_asg.json"]] }, 
+        "TemplateURL":                          {"Fn::Join": [ "", ["https://s3.amazonaws.com/", {"Ref": "CloudToolsBucket"}, "-", {"Ref": "AWS::Region"}, "/cloudformation/common/",  "amzn_linux_asg.json"]] }, 
         "Parameters": {
           "IsMultiAZStack":                     "False",
           "Role":                               "Bastion-Linux",
@@ -220,7 +210,7 @@
       "DependsOn": [ "Network" ],
       "Type": "AWS::CloudFormation::Stack",
       "Properties": {
-        "TemplateURL": { "Fn::Join": [ "", [ { "Ref" : "CloudToolsBucket" }, { "Ref":"AWS::Region" }, "/common/amzn_linux_asg_and_elb_dns.json" ] ] },
+        "TemplateURL": { "Fn::Join": [ "", [ { "Ref" : "CloudToolsBucket" }, "-", { "Ref":"AWS::Region" }, "/common/amzn_linux_asg_and_elb_dns.json" ] ] },
         "Parameters": {
           "IsMultiAZStack":                     "True",
           "Role":                               "Jenkins",
@@ -271,7 +261,7 @@
     "SecurityGroups": {
       "Type": "AWS::CloudFormation::Stack",
       "Properties": {
-        "TemplateURL":                          { "Fn::Join": [ "", [ { "Ref" : "CloudToolsBucket" }, { "Ref":"AWS::Region" }, "/common/", "security_groups.json" ] ] },
+        "TemplateURL":                          { "Fn::Join": [ "", [ { "Ref" : "CloudToolsBucket" }, "-", { "Ref":"AWS::Region" }, "/common/", "security_groups.json" ] ] },
         "Parameters": {
           "ProductName":                        { "Ref": "ProductName" },
           "Environment":                        { "Ref": "Environment" },
