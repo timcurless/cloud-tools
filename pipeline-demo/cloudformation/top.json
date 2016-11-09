@@ -140,7 +140,7 @@
     "IAM": {
       "Type": "AWS::CloudFormation::Stack",
       "Properties": {
-        "TemplateURL":                          { "Fn::Join": [ "", [ { "Ref" : "CloudToolsBucket" }, "-", { "Ref":"AWS::Region" }, "/common/", "iam.json" ] ] },
+        "TemplateURL":                          { "Fn::Join": [ "", [ "https://s3.amazonaws.com/", { "Ref" : "CloudToolsBucket" }, "-", { "Ref":"AWS::Region" }, "/common/", "iam.json" ] ] },
         "Parameters": {
           "CloudtrailS3BucketARN":              { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref" : "CloudTrailsBucket" }, { "Ref":"AWS::Region" } ] ] },
           "BootstrapS3BucketARN":               { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref" : "BootstrapBucket" }, { "Ref":"AWS::Region" } ] ] },
@@ -210,7 +210,7 @@
       "DependsOn": [ "Network" ],
       "Type": "AWS::CloudFormation::Stack",
       "Properties": {
-        "TemplateURL": { "Fn::Join": [ "", [ { "Ref" : "CloudToolsBucket" }, "-", { "Ref":"AWS::Region" }, "/common/amzn_linux_asg_and_elb_dns.json" ] ] },
+        "TemplateURL": { "Fn::Join": [ "", [ "https://s3.amazonaws.com/", { "Ref" : "CloudToolsBucket" }, "-", { "Ref":"AWS::Region" }, "/common/amzn_linux_asg_and_elb_dns.json" ] ] },
         "Parameters": {
           "IsMultiAZStack":                     "True",
           "Role":                               "Jenkins",
@@ -261,7 +261,7 @@
     "SecurityGroups": {
       "Type": "AWS::CloudFormation::Stack",
       "Properties": {
-        "TemplateURL":                          { "Fn::Join": [ "", [ { "Ref" : "CloudToolsBucket" }, "-", { "Ref":"AWS::Region" }, "/common/", "security_groups.json" ] ] },
+        "TemplateURL":                          { "Fn::Join": [ "", [ "https://s3.amazonaws.com/", { "Ref" : "CloudToolsBucket" }, "-", { "Ref":"AWS::Region" }, "/common/", "security_groups.json" ] ] },
         "Parameters": {
           "ProductName":                        { "Ref": "ProductName" },
           "Environment":                        { "Ref": "Environment" },
@@ -274,7 +274,7 @@
     "CloudTrail": {
       "Type": "AWS::CloudFormation::Stack",
       "Properties": {
-        "TemplateURL":                          { "Fn::Join": [ "", [ { "Ref" : "CloudToolsBucket" }, { "Ref":"AWS::Region" }, "/common/", "cloudtrails.json" ] ] },
+        "TemplateURL":                          { "Fn::Join": [ "", [ "https://s3.amazonaws.com/", { "Ref" : "CloudToolsBucket" }, "-", { "Ref":"AWS::Region" }, "/common/", "cloudtrails.json" ] ] },
         "Parameters": {
           "S3CloudTrailBucket":                 { "Fn::Join": [ "", [ { "Ref" : "CloudTrailsBucket" },    { "Ref":"AWS::Region" } ] ] }
         }
